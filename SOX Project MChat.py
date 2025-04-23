@@ -155,7 +155,7 @@ class JSONTransformer(QWidget):
                 output_json_lines.append({
                     "name": output_name,
                     "is_user": is_user,
-                    "is_system": is_system, # Add the is_system flag as requested
+                    "is_system": False, # Add the is_system flag as requested
                     "send_date": output_timestamp, # Keep the original timestamp format
                     "mes": content
                 })
