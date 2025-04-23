@@ -13,38 +13,31 @@ class JSONTransformer(QWidget):
 
     def initUI(self):
         self.setWindowTitle("S.O.X. - Multi-Chat Conversion Tool") # Update window title
-        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), 'SOXico.png'))) # Use os.path.join for icon path
+        self.setWindowIcon(QIcon('SOXico.png')) # Use os.path.join for icon path
 
         # Create GUI components
         textSpacer = QLabel()
-        textDesc = QLabel("Welcome to S.O.X. Project! This tool aims to convert XoulAI JSONs into TavernAI usable JSONs.\nThis version converts **Multi-Xoul Chats** into a compatible JSON Lines format.")
+        textDesc = QLabel("Welcome to S.O.X. Project! This tool aims to convert XoulAI JSONs into TavernAI usable JSONs.\nThis one is dedicated to convert MULTI Xoul Chats into TavernAI Group Chats") 
         textCredits = QLabel("<i>by Junji Dragonfox @ Project BomberCraft</i>")
-        loadButton = QPushButton("Import Xoul Multi-Chat JSON") # Update button text
-        saveButton = QPushButton("Export TavernAI Chat JSONL") # Update button text and format
+        loadButton = QPushButton("Import Xoul Chat JSON")
+        saveButton = QPushButton("Export TavernAI Chat JSON")
         creditButton = QPushButton("SEE CREDITS")
         textInput = QLabel("VV Station XoulAI VV")
-        textOutput = QLabel("<i>-->> Next Station: TavernAI JSON Lines -->></i>") # Update output text
+        textOutput = QLabel("<i>-->> Next Station: TavernAI -->></i>")
         imageLabel = QLabel()
-
-        # Set an image - Check if the file exists before setting
-        image_path = os.path.join(os.path.dirname(__file__), 'SOX.png')
-        if os.path.exists(image_path):
-             imageLabel.setPixmap(QPixmap(image_path))
-        else:
-             imageLabel.setText("Image not found: SOX.png") # Display message if image is missing
-             imageLabel.setStyleSheet("color: red;") # Optional: make text red
-
-        # --- Styles and Alignment ---
+        
         imageLabel.setAlignment(Qt.AlignCenter)
         textDesc.setAlignment(Qt.AlignCenter)
-        textDesc.setWordWrap(True) # Allow text to wrap
-        textDesc.setTextFormat(Qt.RichText) # Allow rich text like **bold**
         textCredits.setAlignment(Qt.AlignRight)
         textCredits.setTextFormat(Qt.RichText)
-        # textCredits.setOpenExternalLinks(True) # Removed - QLabel doesn't typically open links directly
+        textCredits.setOpenExternalLinks(True)
         textInput.setAlignment(Qt.AlignCenter)
         textOutput.setAlignment(Qt.AlignCenter)
-        textOutput.setTextFormat(Qt.RichText) # Allow rich text
+        textOutput.setTextFormat(Qt.RichText)
+        textOutput.setOpenExternalLinks(True)
+
+        # Set an image
+        imageLabel.setPixmap(QPixmap('SOX.png'))  # Replace 'your_image.png' with your actual image path
 
         # Layout the UI
         layout = QVBoxLayout()
@@ -61,19 +54,14 @@ class JSONTransformer(QWidget):
         layout.addWidget(textCredits)
         layout.addWidget(creditButton)
 
-        # Connect signals to slots
         loadButton.clicked.connect(self.loadInputFile)
-        # Ensure saveButton is disabled initially until a file is loaded
-        saveButton.setEnabled(False)
         saveButton.clicked.connect(self.transformJSONAndSave)
         creditButton.clicked.connect(self.creditsWND)
 
-        self.saveButton = saveButton # Keep a reference to the save button
         self.setLayout(layout)
-
-
+        
     def creditsWND(self):
-        QMessageBox.information(self, "CREDITS", "R.I.P. XoulAI, we hope you return someday, thanks for the moments.\n\nTesters:\n\nTBA\n\nV0.0.1\n\n<i>Icon and Banner Art: BombshellFX</i>")
+        QMessageBox.information(self, "CREDITS", "R.I.P. XoulAI, we hope you return someday, thanks for the moments.\n\nTesters:\n\nTBA\n\nV0.0.1")
 
     def loadInputFile(self):
         # Suggest .json files and filter
@@ -85,21 +73,21 @@ class JSONTransformer(QWidget):
             with open(filename, 'r', encoding='utf-8') as f: # Added encoding
                 self.inputJson = json.load(f)
             QMessageBox.information(self, "Success!", f"JSON loaded successfully from {filename}!")
-            self.saveButton.setEnabled(True) # Enable save button after successful load
+            #self.saveButton.setEnabled(True) # Enable save button after successful load
 
         except json.JSONDecodeError:
             QMessageBox.critical(self, "Error", f"Failed to decode JSON from {filename}. Please ensure it's a valid JSON file.")
             self.inputJson = None # Clear potential invalid data
-            self.saveButton.setEnabled(False)
+            #self.saveButton.setEnabled(False)
         except FileNotFoundError:
              QMessageBox.critical(self, "Error", f"File not found: {filename}")
              self.inputJson = None
-             self.saveButton.setEnabled(False)
+             #self.saveButton.setEnabled(False)
         except Exception as e:
             print("Error loading file:", str(e))
             QMessageBox.critical(self, "Error", f"An unexpected error occurred while loading: {str(e)}")
             self.inputJson = None
-            self.saveButton.setEnabled(False)
+            #self.saveButton.setEnabled(False)
 
 
     def transformJSONAndSave(self):
