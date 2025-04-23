@@ -99,6 +99,7 @@ class JSONTransformer(QWidget):
             output_json.append({
                 "name": f"{name}",
                 "is_user": True if message["role"] == "user" else False,
+                "is_system": False,
                 "send_date": message['timestamp'],
                 "mes": message['content']
             })
