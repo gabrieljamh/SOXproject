@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 import json
 import os # Import os module
+import re
 
 class JSONTransformer(QWidget):
     def __init__(self):
@@ -101,7 +102,6 @@ class JSONTransformer(QWidget):
         try:
             conv_name = self.inputJson.get('conversation', {}).get('name', 'chat')
             # Sanitize filename: replace spaces with underscores, remove special chars
-            import re
             sanitized_name = re.sub(r'[^\w\-_\. ]', '', conv_name).replace(' ', '_')
             if sanitized_name:
                  default_filename = f"{sanitized_name}_converted.jsonl"
@@ -118,19 +118,22 @@ class JSONTransformer(QWidget):
         if not filename.lower().endswith('.jsonl'):
              filename += '.jsonl'
 
+        # --- Fetch personas and xouls from their correct locations ---
+        # Personas are under conversation
+        all_personas = self.inputJson.get('conversation', {}).get('personas', [])
+        # Xouls are at the top level
+        all_xouls = self.inputJson.get('conversation', {}).get('xouls', [])
+        # -----------------------------------------------------------
+
+
+        output_json_lines = []
 
         try:
-            # Extract user name for comparison
-            # Assuming the first persona is the user
-            user_name = self.inputJson.get('conversation', {}).get('personas', [{}])[0].get('name', 'User') # Default to 'User' if name not found
-
-            output_json_lines = []
-
             # Process messages
-            messages = self.inputJson.get('messages', [])
+            messages = self.inputJson.get('messages', []) # Assuming messages are also at the top level
             if not messages:
                  QMessageBox.warning(self, "Warning", "No messages found in input JSON. Saving an empty file.")
-                 # Proceed to save an empty file
+                 # Proceed to save an empty file (the loop won't run, output_json_lines will be empty)
 
             for message in messages:
                 author_name = message.get('author_name')
@@ -138,26 +141,50 @@ class JSONTransformer(QWidget):
                 timestamp = message.get('timestamp')
                 content = message.get('content')
 
-                # Skip messages with missing crucial data
-                if not all([author_name, author_type, timestamp, content is not None]): # content can be empty string
-                    print(f"Skipping message due to missing data: {message.get('message_id', 'N/A')}")
-                    continue
+                # Skip messages with missing crucial data (original logic)
+                # content can be empty string, so check if it's not None
+                if not all([author_name, author_type, timestamp is not None]): # Check non-optional fields
+                     print(f"Skipping message due to missing author_name, author_type, or timestamp: {message.get('message_id', 'N/A')}")
+                     continue
+                # Check content separately as it can be empty string but not None
+                if content is None:
+                     print(f"Skipping message due to missing content: {message.get('message_id', 'N/A')}")
+                     continue
 
-                # Determine name, is_user, is_system based on author_type
+
+                # Determine name, is_user based on author_type
                 output_name = author_name # Use the author's name directly
-
                 is_user = (author_type == 'user')
-                is_system = (author_type == 'llm') # This covers both standard Xouls and the Narrator
 
-                # Use the original timestamp string
+                # Use the original timestamp string (original logic)
                 output_timestamp = timestamp
 
+                # --- NEW LOGIC TO FIND AVATAR URL ---
+                avatar_url = None
+                if author_type == 'user':
+                    # Search in all_personas for the message's author_name
+                    # Use next() with a default of None to avoid StopIteration if not found
+                    found_entry = next((p for p in all_personas if p.get('name') == author_name), None)
+                    if found_entry:
+                        avatar_url = found_entry.get('icon_url')
+                elif author_type == 'llm': # Assuming any non-user is an 'llm' in this context
+                     # Search in all_xouls for the message's author_name
+                     found_entry = next((x for x in all_xouls if x.get('name') == author_name), None)
+                     if found_entry:
+                         avatar_url = found_entry.get('icon_url')
+                # If avatar_url is still None, it means the author wasn't found in the lists
+                # or the entry didn't have an 'icon_url'. It will output as null in JSON.
+                # -------------------------------------
+
+
+                # Append the message data to the output list
                 output_json_lines.append({
                     "name": output_name,
                     "is_user": is_user,
-                    "is_system": False, # Add the is_system flag as requested
-                    "send_date": output_timestamp, # Keep the original timestamp format
-                    "mes": content
+                    "is_system": False, # Keeping this as requested in the original output format
+                    "send_date": output_timestamp,
+                    "mes": content,
+                    "force_avatar": avatar_url # ADD THE NEW KEY HERE with the found URL (or None)
                 })
 
             # Save the output JSON in JSON Lines (jsonl) format
