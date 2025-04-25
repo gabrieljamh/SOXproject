@@ -1,4 +1,4 @@
-# S.O.X. Project
+# S.O.X. Project - Migration Tools for XoulAI to TavernAI
 ![SOX](https://github.com/user-attachments/assets/8bc9616b-9f13-47f4-a782-08a6458988fb)
 
 S.O.X. Project is a set of tool to aid the migration from XoulAI to SillyTavern (TavernAI) written in python
