@@ -37,5 +37,9 @@ then run the script using:
 ```
 python <SCRIPT>.py
 ```
+you may also need requests to run the extra tools:
+```
+pip install requests
+```
 
 *You can always also use the standalone versions on Releases tab
