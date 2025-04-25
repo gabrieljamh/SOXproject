@@ -22,8 +22,9 @@ It's a completely fanmade tool by someone who love the community and want to hel
 
 # -->> NEXT STATION: TAVERNAI -->>
 
-Why migrating to SillyTaverm?
-Mostly for stability, local LLMs are active as long as you have it running on your PC, meaning you won't need to relay on AI platforms that may close and you lose all of your data again
+- Why migrating to SillyTaverm?
+
+Mostly for stability, local LLMs are active as long as you have it running on your PC, meaning you won't need to relay on AI platforms that may close and you lose all of your data again. SillyTavern is also higly customizable making your experience unique the way you want
 
 # HOW TO USE:
 
