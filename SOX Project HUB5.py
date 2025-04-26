@@ -10,6 +10,7 @@ import re
 import requests
 from urllib.parse import urlparse
 import hashlib
+from datetime import datetime # Import datetime
 
 # --- Helper function to safely load JSON ---
 def safe_json_load(filename):
@@ -45,6 +46,7 @@ def safe_json_save(data, filename, indent=4, is_jsonl=False):
                         json.dump(item, f, ensure_ascii=False)
                         f.write('\n')
                 else:
+                     # Handle case where a single dict is passed but jsonl is requested (unusual but safe)
                      json.dump(data, f, ensure_ascii=False)
                      f.write('\n')
             else:
@@ -223,7 +225,7 @@ class Tool_CharExtract(QWidget):
             self.inputJson = None
             self._input_filename = None
             self.loadedFileLabel.setText("No file loaded")
-            self._check_enable_save()
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
@@ -250,7 +252,7 @@ class Tool_CharExtract(QWidget):
             self._input_filename = None
             self.loadedFileLabel.setText("Load failed")
 
-        self._check_enable_save()
+        self._check_enable_save() # FIX: Added self.
 
     def transformJSONAndSave(self):
         if not isinstance(self.inputJson, dict) or \
@@ -259,7 +261,7 @@ class Tool_CharExtract(QWidget):
            "xouls" not in self.inputJson["conversation"] or \
            not isinstance(self.inputJson["conversation"].get("xouls"), list):
             QMessageBox.warning(self, "Error", "No valid JSON data loaded or structure is invalid!")
-            _check_enable_save() # Should already be disabled, but harmless
+            self._check_enable_save()
             return
 
         conversation_data = self.inputJson.get("conversation", {})
@@ -391,6 +393,7 @@ class Tool_CharacterSingle(QWidget):
         if self.stacked_widget: self.stacked_widget.setCurrentIndex(0)
 
     def _check_enable_save(self):
+        # Corrected structure check for Single Character file
         if isinstance(self.inputJson, dict) and "name" in self.inputJson:
             self.saveButton.setEnabled(True)
             print("Input file loaded and basic character structure found. Save button enabled.")
@@ -402,20 +405,21 @@ class Tool_CharacterSingle(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Input JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.inputJson = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("No file loaded")
-            self._check_enable_save()
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
         if loaded_data:
+             # Corrected structure check for Single Character file
              if not isinstance(loaded_data, dict) or "name" not in loaded_data:
                   self.inputJson = None
-                  self._input_filename = None
+                  self._input_filename = None # FIX: Added self.
                   self.loadedFileLabel.setText("Invalid file structure")
                   QMessageBox.critical(self, "Data Structure Error",
                                        f"The loaded file does not appear to be a valid Single Xoul Character JSON.\n"
-                                                                     f"Missing expected 'name' key.") # Corrected f-string typo
+                                       f"Missing expected 'name' key.")
                   print(f"Data structure error in {filename}: Missing expected 'name' key for single character.")
              else:
                   self.inputJson = loaded_data
@@ -424,15 +428,16 @@ class Tool_CharacterSingle(QWidget):
                   QMessageBox.information(self, "Success!", "JSON loaded successfully!")
         else:
              self.inputJson = None
-             self._input_filename = None
+             self._input_filename = None # FIX: Added self.
              self.loadedFileLabel.setText("Load failed")
 
-        self._check_enable_save()
+        self._check_enable_save() # FIX: Added self.
 
     def transformJSONAndSave(self):
+        # Corrected initial check for Single Character file
         if not isinstance(self.inputJson, dict) or "name" not in self.inputJson:
             QMessageBox.warning(self, "Warning", "No valid input JSON data loaded.")
-            _check_enable_save()
+            self._check_enable_save()
             return
 
         try:
@@ -548,16 +553,16 @@ class Tool_PersonaAdd(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Load TavernAI Persona's Backup JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.input_data = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabelA.setText("TavernAI Backup: No file loaded")
-            self._check_enable_save()
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
         if loaded_data:
             if not isinstance(loaded_data, dict) or 'personas' not in loaded_data or 'persona_descriptions' not in loaded_data:
                  self.input_data = None
-                 self._input_filename = None
+                 self._input_filename = None # FIX: Added self.
                  self.loadedFileLabelA.setText("TavernAI Backup: Invalid structure")
                  QMessageBox.critical(self, "Data Structure Error",
                                       f"The loaded file does not appear to be a valid TavernAI Persona backup.\n"
@@ -570,26 +575,26 @@ class Tool_PersonaAdd(QWidget):
                 QMessageBox.information(self, "Success!", "TavernAI Backup loaded successfully!")
         else:
             self.input_data = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabelA.setText("TavernAI Backup: Load failed")
 
-        _check_enable_save()
+        self._check_enable_save() # FIX: Added self.
 
 
     def loadDataFile(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Add Xoul Persona from JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.config_data = None
-            self._config_filename = None
+            self._config_filename = None # FIX: Added self.
             self.loadedFileLabelB.setText("Xoul Persona: No file loaded")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
         if loaded_data:
             if not isinstance(loaded_data, dict) or 'name' not in loaded_data or 'prompt' not in loaded_data:
                 self.config_data = None
-                _config_filename = None # <-- FIX APPLIED HERE (was missing self.)
+                self._config_filename = None # FIX: Added self.
                 self.loadedFileLabelB.setText("Xoul Persona: Invalid structure")
                 QMessageBox.critical(self, "Data Structure Error",
                                      f"The loaded file does not appear to be a valid Xoul Persona JSON.\n"
@@ -603,10 +608,10 @@ class Tool_PersonaAdd(QWidget):
 
         else:
             self.config_data = None
-            _config_filename = None # <-- FIX APPLIED HERE (was missing self.)
+            self._config_filename = None # FIX: Added self.
             self.loadedFileLabelB.setText("Xoul Persona: Load failed")
 
-        _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+        self._check_enable_save() # FIX: Added self.
 
 
     def transformJSONAndSave(self):
@@ -614,7 +619,7 @@ class Tool_PersonaAdd(QWidget):
         config_ok = isinstance(self.config_data, dict) and 'name' in self.config_data and 'prompt' in self.config_data
         if not (input_ok and config_ok):
             QMessageBox.warning(self, "Warning", "Please load both valid JSON files first.")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         try:
@@ -732,16 +737,16 @@ class Tool_ScenarioConvert(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Xoul Scenario JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.inputJson = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("No file loaded")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
         if loaded_data:
             if not isinstance(loaded_data, dict) or ('name' not in loaded_data and 'prompt' not in loaded_data):
                   self.inputJson = None
-                  _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+                  self._input_filename = None # FIX: Added self.
                   self.loadedFileLabel.setText("Invalid file structure")
                   QMessageBox.critical(self, "Data Structure Error",
                                        f"The loaded file does not appear to be a valid Xoul Scenario JSON.\n"
@@ -755,16 +760,16 @@ class Tool_ScenarioConvert(QWidget):
 
         else: # loaded_data is None
              self.inputJson = None
-             _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+             self._input_filename = None # FIX: Added self.
              self.loadedFileLabel.setText("Load failed")
 
-        _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+        self._check_enable_save() # FIX: Added self.
 
 
     def transformJSONAndSave(self):
         if not isinstance(self.inputJson, dict) or ('name' not in self.inputJson and 'prompt' not in self.inputJson):
             QMessageBox.warning(self, "Error", "No valid JSON data loaded! Please load a scenario JSON first.")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         try:
@@ -891,9 +896,9 @@ class Tool_LorebookConvert(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Xoul Lorebook JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.inputJson = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("No file loaded")
-            self._check_enable_save()
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
@@ -905,7 +910,7 @@ class Tool_LorebookConvert(QWidget):
                not isinstance(loaded_data["embedded"].get("sections"), list):
 
                 self.inputJson = None
-                self._input_filename = None
+                self._input_filename = None # FIX: Added self.
                 self.loadedFileLabel.setText("Invalid file structure")
                 QMessageBox.critical(self, "Data Structure Error",
                                      f"The loaded file does not appear to be a valid Xoul Lorebook JSON.\n"
@@ -919,10 +924,10 @@ class Tool_LorebookConvert(QWidget):
 
         else: # loaded_data is None
              self.inputJson = None
-             self._input_filename = None
+             self._input_filename = None # FIX: Added self.
              self.loadedFileLabel.setText("Load failed")
 
-        self._check_enable_save()
+        self._check_enable_save() # FIX: Added self.
 
 
     def transformJSONAndSave(self):
@@ -932,7 +937,7 @@ class Tool_LorebookConvert(QWidget):
            "sections" not in self.inputJson["embedded"] or \
            not isinstance(self.inputJson["embedded"].get("sections"), list):
             QMessageBox.warning(self, "Error", "No valid Lorebook JSON data loaded or structure is invalid!")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         try:
@@ -975,10 +980,17 @@ class Tool_LorebookConvert(QWidget):
                      print(f"Error processing section {section_identifier}: {e}")
                      continue
 
+            # output_json was missing. It should be the `entries_dict` wrapped in an "entries" key.
+            output_json = {"entries": entries_dict} # FIX: Defined output_json here
+
             saved_count = len(entries_dict)
-            if saved_count == 0:
-                 QMessageBox.information(self, "Info", f"No valid sections were found or processed from the Lorebook JSON.")
+            if saved_count == 0 and len(sections_list) > 0: # Check if there were sections but none saved
+                 QMessageBox.information(self, "Info", f"No valid sections were successfully processed from the Lorebook JSON.")
                  return
+            elif saved_count == 0 and len(sections_list) == 0: # Check if input list was empty
+                 QMessageBox.information(self, "Info", "No 'sections' found in the loaded Lorebook JSON to convert.")
+                 return
+
 
             default_save_name = "converted_lorebook.json"
             if self._input_filename:
@@ -1058,11 +1070,12 @@ class Tool_ChatSingle(QWidget):
         if self.stacked_widget: self.stacked_widget.setCurrentIndex(0)
 
     def _check_enable_save(self):
+        # Corrected structure check for Single Chat file
         if isinstance(self.inputJson, dict) and \
+           "messages" in self.inputJson and isinstance(self.inputJson.get("messages"), list) and \
            "conversation" in self.inputJson and isinstance(self.inputJson.get("conversation"), dict) and \
-           "messages" in self.inputJson["conversation"] and isinstance(self.inputJson["conversation"].get("messages"), list) and \
-           "personas" in self.inputJson["conversation"] and isinstance(self.inputJson["conversation"].get("personas"), list) and \
-           "xouls" in self.inputJson["conversation"] and isinstance(self.inputJson["conversation"].get("xouls"), list):
+           "personas" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("personas"), list) and \
+           "xouls" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("xouls"), list):
             self.saveButton.setEnabled(True)
             print("Input file loaded and expected single chat structure found. Save button enabled.")
         else:
@@ -1073,26 +1086,26 @@ class Tool_ChatSingle(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Xoul Chat JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.inputJson = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("No file loaded")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
         if loaded_data:
-            if not isinstance(loaded_data, dict) or \
-               "conversation" not in loaded_data or \
-               not isinstance(loaded_data.get("conversation"), dict) or \
-               "messages" not in loaded_data["conversation"] or not isinstance(loaded_data["conversation"].get("messages"), list) or \
-               "personas" not in loaded_data["conversation"] or not isinstance(loaded_data["conversation"].get("personas"), list) or \
-               "xouls" not in loaded_data["conversation"] or not isinstance(loaded_data["conversation"].get("xouls"), list):
+            # Corrected structure check for Single Chat file
+            if not (isinstance(loaded_data, dict) and \
+               "messages" in loaded_data and isinstance(loaded_data.get("messages"), list) and \
+               "conversation" in loaded_data and isinstance(loaded_data.get("conversation"), dict) and \
+               "personas" in loaded_data.get("conversation", {}) and isinstance(loaded_data["conversation"].get("personas"), list) and \
+               "xouls" in loaded_data.get("conversation", {}) and isinstance(loaded_data["conversation"].get("xouls"), list)):
 
                 self.inputJson = None
-                self._input_filename = None
+                self._input_filename = None # FIX: Added self.
                 self.loadedFileLabel.setText("Invalid file structure")
                 QMessageBox.critical(self, "Data Structure Error",
                                      f"The loaded file does not appear to be a valid Single Xoul Chat JSON.\n"
-                                                                    f"Missing expected structure (e.g., 'conversation.messages/personas/xouls').") # Corrected f-string typo
+                                     f"Missing expected structure (Expected top-level 'messages' list, and 'personas'/'xouls' lists inside a top-level 'conversation' dict).") # Updated message
                 print(f"Data structure error in {filename}: Missing expected keys or wrong types for single chat.")
             else:
                 self.inputJson = loaded_data
@@ -1101,40 +1114,47 @@ class Tool_ChatSingle(QWidget):
                 QMessageBox.information(self, "Success!", "JSON loaded successfully!")
         else:
             self.inputJson = None
-            self._input_filename = None
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("Load failed")
 
-        _check_enable_save()
+        self._check_enable_save() # FIX: Added self.
 
     def transformJSONAndSave(self):
-        if not isinstance(self.inputJson, dict) or \
-           "conversation" not in self.inputJson or \
-           not isinstance(self.inputJson.get("conversation"), dict) or \
-           "messages" not in self.inputJson["conversation"] or not isinstance(self.inputJson["conversation"].get("messages"), list) or \
-           "personas" not in self.inputJson["conversation"] or not isinstance(self.inputJson["conversation"].get("personas"), list) or \
-           "xouls" not in self.inputJson["conversation"] or not isinstance(self.inputJson["conversation"].get("xouls"), list):
+        # Corrected initial check for Single Chat file
+        if not (isinstance(self.inputJson, dict) and \
+           "messages" in self.inputJson and isinstance(self.inputJson.get("messages"), list) and \
+           "conversation" in self.inputJson and isinstance(self.inputJson.get("conversation"), dict) and \
+           "personas" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("personas"), list) and \
+           "xouls" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("xouls"), list)):
             QMessageBox.warning(self, "Error", "No valid Chat JSON data loaded or structure is invalid!")
-            _check_enable_save()
+            self._check_enable_save() # FIX: Added self.
             return
 
         try:
             conversation_data = self.inputJson.get('conversation', {})
             personas_list = conversation_data.get('personas', [])
             xouls_list = conversation_data.get('xouls', [])
-            messages_list = conversation_data.get('messages', [])
+            messages_list = self.inputJson.get('messages', []) # Access messages from top level inputJson
 
             if not isinstance(personas_list, list) or len(personas_list) == 0:
                  QMessageBox.warning(self, "Data Warning", "No 'personas' list found or it's empty in the chat JSON.")
-                 return
+                 # Decide if you want to continue without a persona (defaults to "User")
+                 # For now, we'll let it continue as it will default username later
+                 print("Warning: No 'personas' list found or it's empty in the chat JSON.")
+                 # return # Don't return here
             if not isinstance(xouls_list, list) or len(xouls_list) == 0:
                  QMessageBox.warning(self, "Data Warning", "No 'xouls' list found or it's empty in the chat JSON.")
-                 return
+                 # Decide if you want to continue without a xoul (defaults to "Character")
+                 # For now, we'll let it continue as it will default charactername later
+                 print("Warning: No 'xouls' list found or it's empty in the chat JSON.")
+                 # return # Don't return here
+
             if not isinstance(messages_list, list) or len(messages_list) == 0:
                  QMessageBox.information(self, "Info", "No 'messages' found in the chat JSON to convert.")
                  return
 
-            first_persona = personas_list[0] if isinstance(personas_list[0], dict) else {}
-            first_xoul = xouls_list[0] if isinstance(xouls_list[0], dict) else {}
+            first_persona = personas_list[0] if len(personas_list) > 0 and isinstance(personas_list[0], dict) else {} # Check list length
+            first_xoul = xouls_list[0] if len(xouls_list) > 0 and isinstance(xouls_list[0], dict) else {} # Check list length
 
             username = first_persona.get('name', 'User')
             character_name = first_xoul.get('name', 'Character')
@@ -1150,7 +1170,7 @@ class Tool_ChatSingle(QWidget):
                  try:
                      role = message.get('role')
                      content = message.get('content', '')
-                     timestamp = message.get('timestamp', '')
+                     raw_timestamp = message.get('timestamp') # Get the raw timestamp string
 
                      sender_name = None
                      is_user = False
@@ -1167,16 +1187,60 @@ class Tool_ChatSingle(QWidget):
                          is_system = True
                          is_user = False
                      else:
+                         # Message roles might differ, or unexpected values
+                         print(f"Warning: Unexpected role '{role}' for message at index {i}.")
+                         # Attempt to infer sender if role is missing/unknown based on name?
+                         # Or just skip? Skipping for now to match previous logic.
                          failed_message_count += 1
-                         print(f"Skipping message at index {i}: Unexpected role '{role}'.")
-                         continue
+                         continue # Skip message with unhandled role
+
+                     # --- Timestamp Conversion ---
+                     formatted_timestamp = "" # Default if conversion fails
+                     if isinstance(raw_timestamp, (int, float)): # Handle numeric timestamps if they occur
+                         try:
+                              # Assuming integer/float timestamps are Unix timestamps (seconds since epoch)
+                              dt_object = datetime.fromtimestamp(raw_timestamp)
+                              formatted_timestamp = dt_object.strftime("%B %d, %Y %I:%M%p").replace('AM', 'am').replace('PM', 'pm')
+                         except Exception as e:
+                              print(f"Warning: Failed to parse numeric timestamp '{raw_timestamp}' for message at index {i}: {e}")
+                     elif isinstance(raw_timestamp, str) and raw_timestamp: # Handle string timestamps
+                         try:
+                             # Handle potential 'Z' timezone indicator by replacing with +00:00
+                             # This is generally safer for fromisoformat
+                             if raw_timestamp.endswith('Z'):
+                                 iso_timestamp_str = raw_timestamp[:-1] + '+00:00'
+                             else:
+                                 iso_timestamp_str = raw_timestamp
+
+                             # Handle timestamps without microseconds but ending with +HH:MM or -HH:MM
+                             if '.' not in iso_timestamp_str and ('+' in iso_timestamp_str or '-' in iso_timestamp_str):
+                                 # Append .000000 to make it compatible with fromisoformat if it lacks micros but has timezone offset
+                                 parts = re.split(r'([+-]\d{2}:\d{2})', iso_timestamp_str)
+                                 if len(parts) == 3: # Should be [datetime_part, timezone_offset, '']
+                                     iso_timestamp_str = parts[0] + '.000000' + parts[1]
+                                 # If no timezone offset, just lacks micros, add .000000
+                                 elif '+' not in iso_timestamp_str and '-' not in iso_timestamp_str:
+                                      iso_timestamp_str += '.000000'
+
+
+                             dt_object = datetime.fromisoformat(iso_timestamp_str)
+                             # Format to "Month Day, Year Hour:MinuteAM/PM"
+                             formatted_timestamp = dt_object.strftime("%B %d, %Y %I:%M%p").replace('AM', 'am').replace('PM', 'pm') # lowercase am/pm
+                         except ValueError as e:
+                             print(f"Warning: Failed to parse string timestamp '{raw_timestamp}' (processed as '{iso_timestamp_str}') for message at index {i}: {e}")
+                             # Keep formatted_timestamp as "" or use raw_timestamp? Using "" as per format requirement.
+                         except Exception as e:
+                             print(f"Warning: Unexpected error parsing timestamp '{raw_timestamp}' (processed as '{iso_timestamp_str}') for message at index {i}: {e}")
+                             # Keep formatted_timestamp as ""
+                     # Else: raw_timestamp is None or empty string, formatted_timestamp remains ""
+
 
                      # TavernAI jsonl message object structure
                      output_message = {
                          "name": sender_name,
                          "is_user": is_user,
                          "is_system": is_system,
-                         "send_date": timestamp,
+                         "send_date": formatted_timestamp, # Use the formatted timestamp
                          "mes": content
                          # Note: force_avatar is not typically in *single* character chat jsonl
                      }
@@ -1193,6 +1257,7 @@ class Tool_ChatSingle(QWidget):
                  print("\n--- No messages converted ---")
                  return
             elif successfully_converted_count == 0 and len(messages_list) == 0:
+                 QMessageBox.information(self, "Info", "No 'messages' found in the chat JSON to convert.")
                  return
 
             default_save_name = "converted_chat.jsonl"
@@ -1200,10 +1265,15 @@ class Tool_ChatSingle(QWidget):
                  base, ext = os.path.splitext(os.path.basename(self._input_filename))
                  default_save_name = f"{base}.jsonl"
 
-            filename, _ = QFileDialog.getSaveFileName(self, "Save Output JSON Lines", default_save_name, 'JSON Lines files (*.jsonl);;All files (*)')
+            filename, selected_filter = QFileDialog.getSaveFileName(self, "Save Output JSON Lines", default_save_name, 'JSON Lines files (*.jsonl);;All files (*)') # Capture selected filter
             if not filename: return
 
-            if _ and 'JSON Lines files' in _ and not filename.lower().endswith('.jsonl'): filename += '.jsonl'
+            # Ensure .jsonl extension if the filter was JSON Lines and no extension was provided
+            # Check both selected_filter and if the saved filename has an extension
+            if (selected_filter and 'JSON Lines files' in selected_filter and not filename.lower().endswith('.jsonl')) or \
+               (not selected_filter and not os.path.splitext(filename)[1]): # If 'All files' is selected, check if user typed an extension
+                 filename += '.jsonl'
+
 
             # Save using the helper function (jsonl)
             if safe_json_save(output_messages, filename, is_jsonl=True):
@@ -1268,10 +1338,13 @@ class Tool_ChatMulti(QWidget):
 
 
     def _check_enable_save(self):
+        # Multi-chat JSON seems to have messages at the top level, not under "conversation"
+        # Add checks for conversation, personas, xouls as they are needed for avatars
         if isinstance(self.inputJson, dict) and \
+           "messages" in self.inputJson and isinstance(self.inputJson.get("messages"), list) and \
            "conversation" in self.inputJson and isinstance(self.inputJson.get("conversation"), dict) and \
-           "messages" in self.inputJson and isinstance(self.inputJson.get("messages"), list):
-
+           "personas" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("personas"), list) and \
+           "xouls" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("xouls"), list):
             self.saveButton.setEnabled(True)
             print("Input file loaded and expected multi-chat structure found. Save button enabled.")
         else:
@@ -1283,24 +1356,27 @@ class Tool_ChatMulti(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Xoul Chat JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.inputJson = None
-            _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("No file loaded")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
 
         if loaded_data:
+             # Corrected structure check for Multi-chat file
             if not (isinstance(loaded_data, dict) and \
+               "messages" in loaded_data and isinstance(loaded_data.get("messages"), list) and \
                "conversation" in loaded_data and isinstance(loaded_data.get("conversation"), dict) and \
-               "messages" in loaded_data and isinstance(loaded_data.get("messages"), list)):
+               "personas" in loaded_data.get("conversation", {}) and isinstance(loaded_data["conversation"].get("personas"), list) and \
+               "xouls" in loaded_data.get("conversation", {}) and isinstance(loaded_data["conversation"].get("xouls"), list)):
 
                 self.inputJson = None
-                _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+                self._input_filename = None # FIX: Added self.
                 self.loadedFileLabel.setText("Invalid file structure")
                 QMessageBox.critical(self, "Data Structure Error",
                                      f"The loaded file does not appear to be a valid Xoul Multi-Chat JSON.\n"
-                                                                   f"Missing expected structure (e.g., top-level 'messages' list or 'conversation' dict).") # Corrected f-string typo
+                                     f"Missing expected structure (Expected top-level 'messages' list, and 'personas'/'xouls' lists inside a top-level 'conversation' dict).") # Updated message
                 print(f"Data structure error in {filename}: Missing expected keys or wrong types for multi-chat.")
             else:
                 self.inputJson = loaded_data
@@ -1310,30 +1386,41 @@ class Tool_ChatMulti(QWidget):
 
         else: # loaded_data is None
             self.inputJson = None
-            _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("Load failed")
 
-
-        _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+        self._check_enable_save() # FIX: Added self.
 
 
     def transformJSONAndSave(self):
-        if not isinstance(self.inputJson, dict) or \
-           "conversation" not in self.inputJson or not isinstance(self.inputJson.get("conversation"), dict) or \
-           "messages" not in self.inputJson or not isinstance(self.inputJson.get("messages"), list):
+         # Corrected initial check for Multi-chat file
+        if not (isinstance(self.inputJson, dict) and \
+           "messages" in self.inputJson and isinstance(self.inputJson.get("messages"), list) and \
+           "conversation" in self.inputJson and isinstance(self.inputJson.get("conversation"), dict) and \
+           "personas" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("personas"), list) and \
+           "xouls" in self.inputJson.get("conversation", {}) and isinstance(self.inputJson["conversation"].get("xouls"), list)):
             QMessageBox.warning(self, "Error", "No valid Chat JSON data loaded or structure is invalid!")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         try:
+            # Access conversation data, personas, and xouls from the 'conversation' object (top level)
             conversation_data = self.inputJson.get('conversation', {})
             all_personas = conversation_data.get('personas', [])
             all_xouls = conversation_data.get('xouls', [])
-            messages_list = self.inputJson.get('messages', []) # Messages are top level here!
+            # Access messages from the top level
+            messages_list = self.inputJson.get('messages', [])
 
             if not isinstance(messages_list, list) or len(messages_list) == 0:
                  QMessageBox.information(self, "Info", "No 'messages' found in the chat JSON to convert.")
                  return
+
+            # Add warnings if personas/xouls lists are empty, as avatars might not be resolved
+            if not isinstance(all_personas, list) or len(all_personas) == 0:
+                 print("Warning: No 'personas' list found or it's empty in the 'conversation' object. User avatars may not be displayed.")
+            if not isinstance(all_xouls, list) or len(all_xouls) == 0:
+                 print("Warning: No 'xouls' list found or it's empty in the 'conversation' object. LLM avatars may not be displayed.")
+
 
             output_messages = []
             failed_message_count = 0
@@ -1346,23 +1433,65 @@ class Tool_ChatMulti(QWidget):
                  try:
                      author_name = message.get('author_name')
                      author_type = message.get('author_type') # 'user' or 'llm'
-                     timestamp = message.get('timestamp')
+                     raw_timestamp = message.get('timestamp') # Get the raw timestamp string
                      content = message.get('content')
 
-                     if not all([author_name, author_type, timestamp is not None]):
-                          print(f"Skipping message due to missing author_name, author_type, or timestamp: {message.get('message_id', f'index_{i}')}")
+                     # Check for essential fields
+                     if not all([author_name, author_type]) or raw_timestamp is None or content is None: # raw_timestamp can be 0, check for None
+                          print(f"Skipping message due to missing essential data (author_name, author_type, timestamp, or content): {message.get('message_id', f'index_{i}')}")
                           failed_message_count += 1
                           continue
-                     if content is None:
-                          print(f"Skipping message due to missing content: {message.get('message_id', f'index_{i}')}")
-                          failed_message_count += 1
-                          continue
+
 
                      output_name = author_name
                      is_user = (author_type == 'user')
-                     is_system = False
+                     is_system = (author_type == 'system') # Explicitly check for system type if it exists
+                     if not is_user and not is_system: # Assume anything else is LLM/assistant
+                         # Double-check if the message has a valid author_type we understand
+                         if author_type not in ['user', 'llm', 'system']:
+                             print(f"Warning: Unknown author_type '{author_type}' for message at index {i}. Treating as non-user/non-system.")
+                         pass # Keep is_user=False, is_system=False
 
-                     output_timestamp = timestamp
+                     # --- Timestamp Conversion ---
+                     formatted_timestamp = "" # Default if conversion fails
+                     if isinstance(raw_timestamp, (int, float)): # Handle numeric timestamps if they occur
+                         try:
+                              # Assuming integer/float timestamps are Unix timestamps (seconds since epoch)
+                              dt_object = datetime.fromtimestamp(raw_timestamp)
+                              formatted_timestamp = dt_object.strftime("%B %d, %Y %I:%M%p").replace('AM', 'am').replace('PM', 'pm')
+                         except Exception as e:
+                              print(f"Warning: Failed to parse numeric timestamp '{raw_timestamp}' for message at index {i}: {e}")
+                     elif isinstance(raw_timestamp, str) and raw_timestamp: # Handle string timestamps
+                         try:
+                             # Handle potential 'Z' timezone indicator by replacing with +00:00
+                             # This is generally safer for fromisoformat
+                             if raw_timestamp.endswith('Z'):
+                                 iso_timestamp_str = raw_timestamp[:-1] + '+00:00'
+                             else:
+                                 iso_timestamp_str = raw_timestamp
+
+                             # Handle timestamps without microseconds but ending with +HH:MM or -HH:MM
+                             if '.' not in iso_timestamp_str and ('+' in iso_timestamp_str or '-' in iso_timestamp_str):
+                                 # Append .000000 to make it compatible with fromisoformat if it lacks micros but has timezone offset
+                                 parts = re.split(r'([+-]\d{2}:\d{2})', iso_timestamp_str)
+                                 if len(parts) == 3: # Should be [datetime_part, timezone_offset, '']
+                                     iso_timestamp_str = parts[0] + '.000000' + parts[1]
+                                 # If no timezone offset, just lacks micros, add .000000
+                                 elif '+' not in iso_timestamp_str and '-' not in iso_timestamp_str:
+                                      iso_timestamp_str += '.000000'
+
+
+                             dt_object = datetime.fromisoformat(iso_timestamp_str)
+                             # Format to "Month Day, Year Hour:MinuteAM/PM"
+                             formatted_timestamp = dt_object.strftime("%B %d, %Y %I:%M%p").replace('AM', 'am').replace('PM', 'pm') # lowercase am/pm
+                         except ValueError as e:
+                             print(f"Warning: Failed to parse string timestamp '{raw_timestamp}' (processed as '{iso_timestamp_str}') for message at index {i}: {e}")
+                             # Keep formatted_timestamp as "" or use raw_timestamp? Using "" as per format requirement.
+                         except Exception as e:
+                             print(f"Warning: Unexpected error parsing timestamp '{raw_timestamp}' (processed as '{iso_timestamp_str}') for message at index {i}: {e}")
+                             # Keep formatted_timestamp as ""
+                     # Else: raw_timestamp is None or empty string, formatted_timestamp remains ""
+
 
                      # --- Find AVATAR URL based on author_name and author_type ---
                      avatar_url = None
@@ -1372,10 +1501,12 @@ class Tool_ChatMulti(QWidget):
                      elif author_type == 'llm':
                          found_entry = next((x for x in all_xouls if isinstance(x, dict) and x.get('name') == author_name), None)
                          if found_entry: avatar_url = found_entry.get('icon_url') # <-- FIX APPLIED HERE (was p)
+                     # Note: System messages usually don't have avatars
 
                      output_message = {
                          "name": output_name, "is_user": is_user, "is_system": is_system,
-                         "send_date": output_timestamp, "mes": content, "force_avatar": avatar_url
+                         "send_date": formatted_timestamp, # Use the formatted timestamp
+                         "mes": content, "force_avatar": avatar_url
                      }
                      output_messages.append(output_message)
 
@@ -1390,20 +1521,29 @@ class Tool_ChatMulti(QWidget):
                  print("\n--- No messages converted ---")
                  return
             elif successfully_converted_count == 0 and len(messages_list) == 0:
+                 QMessageBox.information(self, "Info", "No 'messages' found in the chat JSON to convert.")
                  return
+
 
             default_save_name = "converted_group_chat.jsonl"
             try:
-                 conv_name = conversation_data.get('name', 'group_chat')
+                 # Try to get conversation name from the 'conversation' object if it exists
+                 conv_name = self.inputJson.get('conversation', {}).get('name', 'group_chat')
                  sanitized_name = re.sub(r'[^\w\-_\. ]', '_', conv_name).replace(' ', '_')
                  if sanitized_name: default_save_name = f"{sanitized_name}_converted.jsonl"
             except Exception as e:
                  print(f"Could not create default filename: {e}")
                  pass
 
-            filename, _ = QFileDialog.getSaveFileName(self, "Save Output JSON Lines", default_save_name, 'JSON Lines files (*.jsonl);;All files (*)')
+            filename, selected_filter = QFileDialog.getSaveFileName(self, "Save Output JSON Lines", default_save_name, 'JSON Lines files (*.jsonl);;All files (*)') # Capture selected filter
             if not filename: return
-            if _ and 'JSON Lines files' in _ and not filename.lower().endswith('.jsonl'): filename += '.jsonl'
+
+            # Ensure .jsonl extension if the filter was JSON Lines and no extension was provided
+            # Check both selected_filter and if the saved filename has an extension
+            if (selected_filter and 'JSON Lines files' in selected_filter and not filename.lower().endswith('.jsonl')) or \
+               (not selected_filter and not os.path.splitext(filename)[1]): # If 'All files' is selected, check if user typed an extension
+                 filename += '.jsonl'
+
 
             if safe_json_save(output_messages, filename, is_jsonl=True):
                  if failed_message_count == 0:
@@ -1467,36 +1607,39 @@ class Tool_ChatScenarioExtract(QWidget):
             self.stacked_widget.setCurrentIndex(0)
 
     def _check_enable_save(self):
+         # Relaxed the check slightly to allow extraction even if 'prompt' list is empty initially
+         # Transformation will handle if prompt list is empty or contains non-strings
         if isinstance(self.inputJson, dict) and \
            "conversation" in self.inputJson and isinstance(self.inputJson.get("conversation"), dict) and \
            "scenario" in self.inputJson["conversation"] and isinstance(self.inputJson["conversation"].get("scenario"), dict) and \
-           "prompt" in self.inputJson["conversation"]["scenario"] and isinstance(self.inputJson["conversation"]["scenario"].get("prompt"), list) and \
-           len(self.inputJson["conversation"]["scenario"]["prompt"]) > 0 and isinstance(self.inputJson["conversation"]["scenario"]["prompt"][0], str):
+           "prompt" in self.inputJson["conversation"]["scenario"] and isinstance(self.inputJson["conversation"]["scenario"].get("prompt"), list):
             self.saveButton.setEnabled(True)
             print("Input file loaded and expected chat scenario structure found. Save button enabled.")
         else:
             self.saveButton.setEnabled(False)
             print("Waiting for input file to be loaded or structure invalid for chat scenario extraction.")
 
+
     def loadInputFile(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Xoul Chat JSON", '.', 'JSON files (*.json)')
         if not filename:
             self.inputJson = None
-            _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+            self._input_filename = None # FIX: Added self.
             self.loadedFileLabel.setText("No file loaded")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         loaded_data = safe_json_load(filename)
         if loaded_data:
+             # Relaxed the check slightly to allow extraction even if 'prompt' list is empty initially
+             # Transformation will handle if prompt list is empty or contains non-strings
             if not (isinstance(loaded_data, dict) and \
                "conversation" in loaded_data and isinstance(loaded_data.get("conversation"), dict) and \
                "scenario" in loaded_data["conversation"] and isinstance(loaded_data["conversation"].get("scenario"), dict) and \
-               "prompt" in loaded_data["conversation"]["scenario"] and isinstance(loaded_data["conversation"]["scenario"].get("prompt"), list) and \
-               len(loaded_data["conversation"]["scenario"]["prompt"]) > 0 and isinstance(loaded_data["conversation"]["scenario"]["prompt"][0], str)):
+               "prompt" in loaded_data["conversation"]["scenario"] and isinstance(loaded_data["conversation"]["scenario"].get("prompt"), list)):
 
                 self.inputJson = None
-                _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+                self._input_filename = None # FIX: Added self.
                 self.loadedFileLabel.setText("Invalid file structure")
                 QMessageBox.critical(self, "Data Structure Error",
                                      f"The loaded file does not appear to be a valid Xoul Chat JSON for scenario extraction.\n"
@@ -1509,26 +1652,29 @@ class Tool_ChatScenarioExtract(QWidget):
                 QMessageBox.information(self, "Success!", "JSON loaded successfully!")
         else:
              self.inputJson = None
-             _input_filename = None # <-- FIX APPLIED HERE (was missing self.)
+             self._input_filename = None # FIX: Added self.
              self.loadedFileLabel.setText("Load failed")
 
-        _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+        self._check_enable_save() # FIX: Added self.
 
     def transformJSONAndSave(self):
+        # Relaxed the check slightly to allow transformation logic to handle edge cases
         if not isinstance(self.inputJson, dict) or \
            "conversation" not in self.inputJson or not isinstance(self.inputJson.get("conversation"), dict) or \
            "scenario" not in self.inputJson["conversation"] or not isinstance(self.inputJson["conversation"].get("scenario"), dict) or \
-           "prompt" not in self.inputJson["conversation"]["scenario"] or not isinstance(self.inputJson["conversation"]["scenario"].get("prompt"), list) or \
-           len(self.inputJson["conversation"]["scenario"]["prompt"]) == 0 or not isinstance(self.inputJson["conversation"]["scenario"]["prompt"][0], str):
+           "prompt" not in self.inputJson["conversation"]["scenario"] or not isinstance(self.inputJson["conversation"]["scenario"].get("prompt"), list):
             QMessageBox.warning(self, "Error", "No valid Chat JSON data loaded or structure is invalid for scenario extraction!")
-            _check_enable_save() # <-- FIX APPLIED HERE (was missing self.)
+            self._check_enable_save() # FIX: Added self.
             return
 
         try:
             conversation_data = self.inputJson.get("conversation", {})
             scenario_data = conversation_data.get("scenario", {})
 
-            full_prompt_text = scenario_data.get("prompt", [""])[0]
+            # Safely get the first item from the prompt list if it exists and is a string
+            prompt_list = scenario_data.get("prompt", [])
+            full_prompt_text = prompt_list[0] if len(prompt_list) > 0 and isinstance(prompt_list[0], str) else ""
+
 
             scenario_name_potential = scenario_data.get("name")
             conversation_name = conversation_data.get("name", "Unnamed Conversation")
@@ -1560,6 +1706,10 @@ class Tool_ChatScenarioExtract(QWidget):
                 else: content_parts.append("\n".join(spec_lines))
 
             content = "".join(content_parts).strip()
+
+            if not content:
+                 QMessageBox.information(self, "Info", "No significant scenario content found to extract.")
+                 return
 
             entry = {
                 "uid": 0, "key": [], "keysecondary": [],
@@ -1687,52 +1837,90 @@ class Tool_AvatarDownloader(QWidget):
         def is_potential_image_url(url_string):
             if not isinstance(url_string, str): return False
             url_string_lower = url_string.lower()
+            # Basic check for common image extensions in the path or query string
             if url_string_lower.startswith(('http://', 'https://')):
                  parsed_url = urlparse(url_string_lower)
                  path = parsed_url.path
-                 _, ext = os.path.splitext(path)
+                 query = parsed_url.query # Also check query string as some URLs include extensions there
+                 combined_part = path + query
+                 _, ext = os.path.splitext(combined_part) # Check extension in path+query
                  image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg')
                  if ext in image_extensions: return True
+                 # Less reliable check: look for extension patterns anywhere in the URL
+                 if re.search(r'\.(png|jpg|jpeg|gif|bmp|webp|svg)(\?|$)', url_string_lower): return True # Check for extension followed by end or ?
             return False
 
+
         def find_image_urls_recursive(data, found_urls, depth=0, max_depth=20):
-            if depth > max_depth: return
+            if depth > max_depth: return # Prevent infinite recursion on deeply nested or circular references
             if isinstance(data, dict):
                 for key, value in data.items():
-                    if is_potential_image_url(value): found_urls.add(value)
+                    if is_potential_image_url(value):
+                        found_urls.add(value)
                     find_image_urls_recursive(value, found_urls, depth + 1, max_depth)
             elif isinstance(data, list):
                 for item in data:
-                    if is_potential_image_url(item): found_urls.add(item)
+                    if is_potential_image_url(item):
+                         found_urls.add(item)
                     find_image_urls_recursive(item, found_urls, depth + 1, max_depth)
             elif isinstance(data, str):
-                if is_potential_image_url(data): found_urls.add(data)
+                if is_potential_image_url(data):
+                     found_urls.add(data)
 
         def get_safe_filename_from_url(url, directory):
-            parsed_url = urlparse(url)
-            original_filename = os.path.basename(parsed_url.path)
-            if not original_filename: original_filename = "downloaded_image"
-            safe_filename = re.sub(r'[^\w\-_\.]', '_', original_filename)
-            if not safe_filename or all(c in '_.' for c in safe_filename):
-                 hash_object = hashlib.md5(url.encode()).hexdigest()
-                 safe_filename = f"hashed_image_{hash_object[:8]}"
-            if safe_filename.startswith('.'): safe_filename = '_' + safe_filename[1:]
-            name, ext = os.path.splitext(safe_filename)
-            common_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg')
-            if not ext or ext.lower() not in common_extensions:
-                 if '.png' in url.lower(): ext = '.png'
-                 elif '.jpg' in url.lower() or '.jpeg' in url.lower(): ext = '.jpg'
-                 elif '.gif' in url.lower(): ext = '.gif'
-                 else: ext = ".png"
-                 safe_filename = f"{name}{ext}"
+            try:
+                parsed_url = urlparse(url)
+                path = parsed_url.path
+                query = parsed_url.query
 
-            output_path = os.path.join(directory, safe_filename)
-            counter = 1
-            base_name, file_ext = os.path.splitext(output_path)
-            while os.path.exists(output_path):
-                output_path = f"{base_name}_{counter}{file_ext}"
-                counter += 1
-            return output_path
+                # Try to get filename from path first
+                original_filename = os.path.basename(path)
+
+                # If path basename is generic or missing extension, look in query string
+                if not original_filename or not os.path.splitext(original_filename)[1]:
+                     query_params = urlparse(f"?{query}").path # Simple way to parse query string as path
+                     if query_params:
+                          query_filename = os.path.basename(query_params)
+                          if query_filename and os.path.splitext(query_filename)[1]:
+                               original_filename = query_filename
+
+
+                if not original_filename or original_filename == "/": original_filename = "downloaded_image"
+
+                safe_filename = re.sub(r'[^\w\-_\.]', '_', original_filename)
+                # Ensure filename is not empty or starts with a dot after sanitization
+                if not safe_filename or safe_filename.startswith('.'):
+                    hash_object = hashlib.md5(url.encode()).hexdigest()
+                    safe_filename = f"hashed_image_{hash_object[:8]}"
+                # Re-add extension if lost during sanitization and wasn't a hash name
+                if '.' not in safe_filename and '.' in original_filename:
+                     _, original_ext = os.path.splitext(original_filename)
+                     safe_filename += original_ext # Add original extension back
+
+                # Fallback: If still no extension or generic, add .png
+                if '.' not in safe_filename:
+                     safe_filename += ".png" # Default to png if no extension found
+
+                output_path = os.path.join(directory, safe_filename)
+                counter = 1
+                base_name, file_ext = os.path.splitext(output_path)
+                while os.path.exists(output_path):
+                    output_path = f"{base_name}_{counter}{file_ext}"
+                    counter += 1
+                return output_path
+            except Exception as e:
+                print(f"Error generating safe filename for URL '{url}': {e}")
+                # Fallback to a simple hashed name if parsing fails badly
+                hash_object = hashlib.md5(url.encode()).hexdigest()
+                safe_filename = f"error_hashed_image_{hash_object[:8]}.png"
+                output_path = os.path.join(directory, safe_filename)
+                counter = 1
+                base_name, file_ext = os.path.splitext(output_path)
+                while os.path.exists(output_path):
+                    output_path = f"{base_name}_{counter}{file_ext}"
+                    counter += 1
+                return output_path
+
 
         found_urls = set()
         find_image_urls_recursive(json_data, found_urls)
@@ -1759,18 +1947,38 @@ class Tool_AvatarDownloader(QWidget):
             for url in found_urls:
                 output_path = None
                 try:
+                    # Skip if URL is clearly not http/https
+                    if not url.lower().startswith(('http://', 'https://')):
+                         failed_downloads[url] = "Skipped: Does not appear to be a standard web URL (missing http/https)."
+                         print(f"Skipping {url}: Not a web URL.")
+                         continue # Skip this URL
+
                     output_path = get_safe_filename_from_url(url, output_dir)
-                    response = requests.get(url, stream=True, timeout=15)
-                    response.raise_for_status()
+                    response = requests.get(url, stream=True, timeout=20) # Increased timeout slightly
+                    response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+
+                    # Optional: Check Content-Type if needed, but rely on extension check mostly
+                    # content_type = response.headers.get('Content-Type', '')
+                    # if not content_type.lower().startswith('image/'):
+                    #     failed_downloads[url] = f"Downloaded content is not an image (Content-Type: {content_type})."
+                    #     print(f"Downloaded content for {url} is not an image.")
+                    #     # Consider deleting the partially downloaded file if any
+                    #     if os.path.exists(output_path):
+                    #         try: os.remove(output_path)
+                    #         except: pass
+                    #     continue
+
 
                     with open(output_path, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=8192): f.write(chunk)
+                        for chunk in response.iter_content(chunk_size=8192):
+                             if chunk: # Filter out keep-alive chunks
+                                 f.write(chunk)
 
                     download_count += 1
                     print(f"Successfully downloaded: {url} -> {os.path.basename(output_path)}")
 
                 except requests.exceptions.Timeout:
-                     failed_downloads[url] = f"Timeout occurred after 15 seconds."
+                     failed_downloads[url] = f"Timeout occurred after 20 seconds."
                      print(f"Failed to download {url}: Timeout")
                 except requests.exceptions.ConnectionError as e:
                     failed_downloads[url] = f"Connection error: {e}"
@@ -1885,7 +2093,7 @@ class SOXHub(QWidget):
         textCredits = QLabel("<i>by Junji Dragonfox @ Project BomberCraft</i>")
         textCredits.setAlignment(Qt.AlignRight)
         textCredits.setTextFormat(Qt.RichText)
-        textCredits.setOpenExternalLinks(True)
+        # textCredits.setOpenExternalLinks(True) # No actual links, keep this off
 
         creditButton = QPushButton("SEE CREDITS")
         creditButton.clicked.connect(self.showCreditsWindow) # Renamed connection
